@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Promax 心金 ROM Editor</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:1180px;margin:auto;padding:16px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+h1{font-size:22px;margin:0}.muted{color:#667085;font-size:13px}.panel{background:#fff;border:1px solid #dfe4ea;border-radius:14px;padding:14px;margin-top:12px}
+button,input,select{min-height:42px;border:1px solid #cbd2da;border-radius:9px;background:#fff;padding:8px 10px;font:inherit}
+button{cursor:pointer}.primary{background:#1769e0;color:#fff;border-color:#1769e0}.danger{background:#fff1f2;border-color:#fecdd3}
+button:disabled{opacity:.45;cursor:not-allowed}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.grow{flex:1;min-width:180px}
+.grid{display:grid;grid-template-columns:330px 1fr;gap:12px}.files{max-height:68vh;overflow:auto;border:1px solid #e5e7eb;border-radius:10px}
+.file{padding:9px 10px;border-bottom:1px solid #eee;cursor:pointer;font:12px ui-monospace,monospace;word-break:break-all}.file:hover,.file.sel{background:#eef5ff}
+.hex{background:#111827;color:#e5e7eb;border-radius:10px;padding:12px;font:12px ui-monospace,monospace;white-space:pre;overflow:auto;max-height:52vh;line-height:1.55}
+label{font-size:12px;font-weight:700;display:block;margin:9px 0 5px}.note{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px;font-size:12px;line-height:1.5}
+.badge{display:inline-block;border-radius:999px;background:#eef2f6;padding:3px 7px;font-size:11px}.ok{color:#087443}.err{color:#b42318}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.files{max-height:35vh}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><div><h1>Promax 心金 ROM Editor</h1><div class="muted">NDS 檔案系統 + NARC + Hex 編輯器（瀏覽器本機處理）</div></div>
+<div class="row"><input id="rom" type="file" accept=".nds"><button id="save" class="primary" disabled>匯出修改後 ROM</button></div></div>
+
+<div class="panel">
+<div class="row">
+<span id="romInfo" class="badge">尚未載入 ROM</span>
+<input id="filter" class="grow" placeholder="搜尋檔案，例如 a/0/0/">
+<button id="scan">重新掃描</button>
+</div>
+<div id="status" class="muted" style="margin-top:8px">請選擇你自己的 .nds ROM。</div>
+</div>
+
+<div class="grid">
+<aside class="panel">
+<b>NDS ROM 檔案系統</b>
+<div class="muted" style="margin:5px 0 9px">點選檔案後可查看內容；NARC 會顯示內部檔案。</div>
+<div id="files" class="files"></div>
+</aside>
+
+<main class="panel">
+<div id="detail"><div class="muted">尚未選擇檔案</div></div>
+</main>
+</div>
+</div>
+
+<script>
+(() => {
+let rom=null, originalName="edited.nds", entries=[], selected=null, selectedData=null, selectedOffset=0, dirty=false;
+
+const $=id=>document.getElementById(id);
+const u32=(a,o)=>a[o]|(a[o+1]<<8)|(a[o+2]<<16)|(a[o+3]<<24>>>0);
+const u16=(a,o)=>a[o]|(a[o+1]<<8);
+function str(a,o,n){return new TextDecoder("ascii").decode(a.subarray(o,o+n)).replace(/\0+$/,"")}
+function hexDump(a,start=0,len=512){
+ let end=Math.min(a.length,start+len), out=[];
+ for(let i=start;i<end;i+=16){
+  let c=a.subarray(i,Math.min(i+16,end)), h=Array.from(c,x=>x.toString(16).padStart(2,"0").toUpperCase());
+  while(h.length<16)h.push("  ");
+  let s=Array.from(c,x=>x>=32&&x<=126?String.fromCharCode(x):".").join("");
+  out.push(i.toString(16).padStart(8,"0").toUpperCase()+"  "+h.join(" ")+"  "+s);
+ }
+ return out.join("\n");
+}
+function ascii(a,o,n){return new TextDecoder("ascii").decode(a.subarray(o,Math.min(a.length,o+n)))}
+function readFNT(){
+ const off=u32(rom,0x40), size=u32(rom,0x44), f=rom.subarray(off,off+size);
+ const rootStart=u32(f,0), rootFirst=u16(f,4), rootParent=u16(f,6);
+ const dirs=[{id:0xF000,start:rootStart,first:rootFirst,parent:rootParent,path:""}];
+ let pos=8, count=0;
+ // Directory table begins at 8, one 8-byte record per directory. Root first index gives first file id.
+ // Build records by traversing IDs from root's directory index. NDS directory IDs are 0xF000 + index.
+ function getDir(id){let idx=id-0xF000; let p=8+idx*8; if(p<8||p+8>f.length)return null; return {start:u32(f,p),first:u16(f,p+4),parent:u16(f,p+6)}}
+ const result=[];
+ function walk(id,path,depth){
+  if(depth>40)return;
+  const d=getDir(id); if(!d)return;
+  let p=d.start, fileId=d.first;
+  while(p<f.length){
+   const n=f[p++]; if(n===0)break;
+   const isDir=(n&0x80)!==0, len=n&0x7f;
+   if(p+len>f.length)break;
+   const name=new TextDecoder("shift-jis").decode(f.subarray(p,p+len)); p+=len;
+   if(isDir){
+    if(p+2>f.length)break; const child=u16(f,p); p+=2;
+    walk(child,path+name+"/",depth+1);
+   }else{
+    result.push({id:fileId++,path:path+name});
+   }
+  }
+ }
+ walk(0xF000,"",0);
+ return result;
+}
+function loadEntries(){
+ const fatOff=u32(rom,0x48), fatSize=u32(rom,0x4c), count=Math.floor(fatSize/8);
+ const fnt=readFNT();
+ const map=new Map(fnt.map(x=>[x.id,x.path]));
+ entries=[];
+ for(let i=0;i<count;i++){
+  const s=u32(rom,fatOff+i*8), e=u32(rom,fatOff+i*8+4);
+  entries.push({id:i,path:map.get(i)||`<unnamed file ${i}>`,start:s,end:e,size:e-s});
+ }
+}
+function renderList(){
+ const q=$("filter").value.trim().toLowerCase();
+ const box=$("files"); box.innerHTML="";
+ const frag=document.createDocumentFragment();
+ entries.filter(e=>e.path.toLowerCase().includes(q)).forEach(e=>{
+  const d=document.createElement("div"); d.className="file"+(selected?.id===e.id?" sel":"");
+  d.textContent=`#${e.id}  ${e.path}  (${e.size.toLocaleString()} B)`;
+  d.addEventListener("click",()=>selectFile(e));
+  frag.appendChild(d);
+ });
+ box.appendChild(frag);
+ $("status").textContent=`已解析 ${entries.length.toLocaleString()} 個 ROM 檔案`;
+}
+function isNarc(a){return a.length>=4 && ascii(a,0,4)==="NARC"}
+function narcInfo(a){
+ if(!isNarc(a))return null;
+ let btaf=a.indexOf(0x42,4); // marker only; exact parsing below
+ const out={files:0,blocks:[]};
+ let p=16;
+ while(p+8<=a.length){
+  const tag=ascii(a,p,4), sz=u32(a,p+4);
+  if(!tag||sz<8||p+sz>a.length)break;
+  out.blocks.push({tag,offset:p,size:sz});
+  if(tag==="BTAF") out.files=u32(a,p+8)/8;
+  p+=sz;
+ }
+ return out;
+}
+function selectFile(e){
+ selected=e; selectedOffset=0;
+ selectedData=rom.slice(e.start,e.end);
+ renderList(); renderDetail();
+}
+function renderDetail(){
+ if(!selected){$("detail").innerHTML='<div class="muted">尚未選擇檔案</div>';return}
+ const n=narcInfo(selectedData);
+ $("detail").innerHTML=`
+ <div class="row"><b style="word-break:break-all">${selected.path}</b><span class="badge">ID ${selected.id}</span><span class="badge">${selected.size.toLocaleString()} B</span>${n?'<span class="badge">NARC</span>':''}</div>
+ <div class="row" style="margin-top:10px">
+  <input id="off" class="grow" placeholder="Offset，例如 0x100" value="0x0">
+  <input id="showlen" value="512" style="width:90px">
+  <button id="jump">查看</button>
+ </div>
+ <div id="narcbox"></div>
+ <div class="hex" id="dump" style="margin-top:10px">${hexDump(selectedData)}</div>
+ <div class="panel" style="padding:10px;margin-top:10px">
+  <b>修改此 ROM 檔案</b>
+  <div class="row" style="margin-top:8px"><input id="wo" class="grow" placeholder="Offset，例如 0x100"><input id="wb" class="grow" placeholder="Hex，例如 90 FF 00"><button id="write" class="primary">寫入</button></div>
+  <div id="ws" class="muted"></div>
+ </div>`;
+ $("jump").onclick=()=>{let o=parseOff($("off").value);if(o===null||o>=selectedData.length)return;selectedOffset=o;$("dump").textContent=hexDump(selectedData,o,Math.min(parseInt($("showlen").value)||512,2048));};
+ $("write").onclick=writeBytes;
+ if(n)renderNarc(n);
+}
+function renderNarc(n){
+ const box=$("narcbox"); box.innerHTML=`<div class="note" style="margin-top:10px"><b>NARC:</b> ${n.files||"?"} 個內部檔案；區塊：${n.blocks.map(x=>x.tag).join(", ")}</div>`;
+ // Show BTAF entries when structurally valid.
+ const b=n.blocks.find(x=>x.tag==="BTAF");
+ if(!b)return;
+ const count=u32(selectedData,b.offset+8)/8, table=b.offset+16;
+ let rows=[];
+ for(let i=0;i<count && table+i*8+8<=selectedData.length;i++){
+  const s=u32(selectedData,table+i*8),e=u32(selectedData,table+i*8+4);
+  rows.push(`<option value="${i}">NARC #${i} · ${s}–${e} (${Math.max(0,e-s)} B)</option>`);
+ }
+ box.innerHTML+=`<div class="row" style="margin-top:8px"><select id="nsel" class="grow">${rows.join("")}</select><button id="nview">查看內部檔案</button></div>`;
+ $("nview").onclick=()=>{
+  const i=parseInt($("nsel").value),s=u32(selectedData,table+i*8),e=u32(selectedData,table+i*8+4);
+  if(e>s&&e<=selectedData.length){$("off").value="0x"+s.toString(16).toUpperCase();selectedOffset=s;$("dump").textContent=hexDump(selectedData,s,Math.min(e-s,2048));}
+ };
+}
+function parseOff(v){v=String(v).trim();if(!v)return null;let n=/^0x/i.test(v)?parseInt(v,16):parseInt(v,10);return Number.isFinite(n)&&n>=0?n:null}
+function parseBytes(v){let p=String(v).trim().split(/\s+/).filter(Boolean);if(!p.length)return null;let a=[];for(const x of p){if(!/^[0-9a-fA-F]{1,2}$/.test(x))return null;a.push(parseInt(x,16))}return new Uint8Array(a)}
+function writeBytes(){
+ if(!selected)return;
+ const o=parseOff($("wo").value),b=parseBytes($("wb").value);
+ if(o===null||!b||o+b.length>selectedData.length){$("ws").textContent="Offset 或 Hex 格式錯誤";return}
+ selectedData.set(b,o);rom.set(b,selected.start+o);dirty=true;$("save").disabled=false;
+ $("ws").textContent=`已修改 ${b.length} bytes；目前仍在瀏覽器記憶體中。`;
+ $("dump").textContent=hexDump(selectedData,Math.max(0,o-32),512);
+}
+$("rom").onchange=async e=>{
+ const f=e.target.files?.[0];if(!f)return;
+ rom=new Uint8Array(await f.arrayBuffer());originalName=f.name;dirty=false;
+ try{
+  const title=ascii(rom,0,12).replace(/\0/g," ").trim(),code=ascii(rom,0x0c,4);
+  loadEntries();$("romInfo").textContent=`${title} · Game Code ${code} · ${rom.length.toLocaleString()} B`;
+  $("save").disabled=false;renderList();
+ }catch(err){$("status").textContent="解析失敗："+err.message}
+};
+$("filter").oninput=renderList;$("scan").onclick=()=>{if(rom){loadEntries();renderList()}};
+$("save").onclick=()=>{
+ if(!rom)return;
+ const blob=new Blob([rom],{type:"application/octet-stream"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download=(originalName.toLowerCase().endsWith(".nds")?originalName.slice(0,-4):originalName)+"-edited.nds";
+ a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+ $("status").textContent="已匯出修改後 ROM。";
+};
+})();
+</script>
+</body></html>
