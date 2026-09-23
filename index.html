@@ -36,8 +36,9 @@ let original=null, rom=null, fileName='modified.nds', fs=null, narcCache=new Map
 const $=id=>document.getElementById(id); const u8=()=>new Uint8Array(rom); const dv=()=>new DataView(rom);
 function setStatus(s,ok=false){$('status').textContent=s;$('status').style.color=ok?'#54d18a':'#9aa8c5'}
 function hex(n,w=2){return n.toString(16).toUpperCase().padStart(w,'0')}
-function read16(a){return new DataView(rom).getUint16(a,true)} function read32(a){return new DataView(rom).getUint32(a,true)}
-function write16(a,v){new DataView(rom).setUint16(a,Number(v)&65535,true)} function write32(a,v){new DataView(rom).setUint32(a,Number(v)>>>0,true)}
+function romView(){return new DataView(rom.buffer,rom.byteOffset,rom.byteLength)}
+function read16(a){return romView().getUint16(a,true)} function read32(a){return romView().getUint32(a,true)}
+function write16(a,v){romView().setUint16(a,Number(v)&65535,true)} function write32(a,v){romView().setUint32(a,Number(v)>>>0,true)}
 function bytesToHex(a){return [...a].map(x=>hex(x)).join(' ')}
 function parseHex(s){return new Uint8Array(s.trim().split(/\s+/).filter(Boolean).map(x=>parseInt(x,16)).filter(x=>Number.isFinite(x)&&x>=0&&x<=255))}
 function parseFNT(){let foff=read32(0x40), fsize=read32(0x44), fat=read32(0x48), paths={};
@@ -49,8 +50,8 @@ function memberBytes(path,id){let n=getNarc(path);if(id<0||id>=n.files.length)th
 function patchMember(path,id,newBytes){let n=getNarc(path),f=n.files[id];if(newBytes.length!==f.e-f.s)throw Error('此版本只允許原地修改，長度必須維持 '+(f.e-f.s)+' bytes');let abs=n.st+n.gmif+8+f.s;rom.set(newBytes,abs);n.a.set(newBytes,n.gmif+8+f.s);dirty=true;$('saveBtn').disabled=false;}
 function field(label,id,value,max=255){return `<div class="field"><label>${label}</label><input id="${id}" type="number" min="0" max="${max}" value="${value}"></div>`}
 function getVal(id){return Number($(id).value)||0}
-function loadRom(file){file.arrayBuffer().then(buf=>{original=new Uint8Array(buf);rom=original.slice();fileName=file.name.replace(/\.nds$/i,'')+'_edited.nds';fs=parseFNT();narcCache.clear();dirty=false;$('saveBtn').disabled=false;let code=new TextDecoder().decode(rom.slice(0x0c,0x10));$('romInfo').innerHTML=`<b>${file.name}</b><br>Game Code: <span class="pill">${code}</span><br>大小：${(rom.length/1048576).toFixed(1)} MiB<br>FNT: 0x${hex(read32(0x40),8)} / ${read32(0x44)} bytes　FAT: 0x${hex(read32(0x48),8)} / ${read32(0x4c)} bytes`;
-if(code!=='IPKJ')setStatus('⚠️ Game Code 不是常見的英文版 HeartGold IPKJ；仍可嘗試，但欄位可能不同。');else setStatus('ROM 載入完成，可以開始修改。',true);}) .catch(e=>setStatus('載入失敗：'+e.message))}
+function loadRom(file){if(!file||!(/\.nds$/i.test(file.name))){setStatus('請選擇 .nds ROM 檔案，不要選 ZIP。');return}if(typeof file.arrayBuffer!=='function'){setStatus('此瀏覽器不支援直接讀取檔案，請用 iPhone Safari 最新版重試。');return}file.arrayBuffer().then(buf=>{if(!(buf instanceof ArrayBuffer)){throw Error('ROM 讀取結果不是 ArrayBuffer');}original=new Uint8Array(buf);rom=original.slice();if(rom.length<0x500){throw Error('檔案太小，不像 NDS ROM');}fileName=file.name.replace(/\.nds$/i,'')+'_edited.nds';fs=parseFNT();narcCache.clear();dirty=false;$('saveBtn').disabled=false;let code=new TextDecoder().decode(rom.slice(0x0c,0x10));$('romInfo').innerHTML=`<b>${file.name}</b><br>Game Code: <span class="pill">${code}</span><br>大小：${(rom.length/1048576).toFixed(1)} MiB<br>FNT: 0x${hex(read32(0x40),8)} / ${read32(0x44)} bytes　FAT: 0x${hex(read32(0x48),8)} / ${read32(0x4c)} bytes`;
+if(code!=='IPKJ')setStatus('⚠️ Game Code 不是常見的英文版 HeartGold IPKJ；仍可嘗試，但欄位可能不同。');else setStatus('ROM 載入完成，可以開始修改。',true);}) .catch(e=>setStatus('載入失敗：'+e.message+'。請確認選的是未壓縮的 .nds ROM。'))}
 $('romFile').onchange=e=>{let f=e.target.files[0];if(f)loadRom(f)};
 $('saveBtn').onclick=()=>{if(!rom)return;let blob=new Blob([rom],{type:'application/octet-stream'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileName;a.click();setStatus('已匯出 '+fileName,true)};
 $('resetBtn').onclick=()=>{if(original){rom=original.slice();narcCache.clear();dirty=false;setStatus('已還原本次修改。');loadCurrentIfAny()}};
