@@ -1,207 +1,78 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Promax 心金 ROM Editor</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Promax 心金 HGSS ROM Editor v2</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-.wrap{max-width:1180px;margin:auto;padding:16px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
-h1{font-size:22px;margin:0}.muted{color:#667085;font-size:13px}.panel{background:#fff;border:1px solid #dfe4ea;border-radius:14px;padding:14px;margin-top:12px}
-button,input,select{min-height:42px;border:1px solid #cbd2da;border-radius:9px;background:#fff;padding:8px 10px;font:inherit}
-button{cursor:pointer}.primary{background:#1769e0;color:#fff;border-color:#1769e0}.danger{background:#fff1f2;border-color:#fecdd3}
-button:disabled{opacity:.45;cursor:not-allowed}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.grow{flex:1;min-width:180px}
-.grid{display:grid;grid-template-columns:330px 1fr;gap:12px}.files{max-height:68vh;overflow:auto;border:1px solid #e5e7eb;border-radius:10px}
-.file{padding:9px 10px;border-bottom:1px solid #eee;cursor:pointer;font:12px ui-monospace,monospace;word-break:break-all}.file:hover,.file.sel{background:#eef5ff}
-.hex{background:#111827;color:#e5e7eb;border-radius:10px;padding:12px;font:12px ui-monospace,monospace;white-space:pre;overflow:auto;max-height:52vh;line-height:1.55}
-label{font-size:12px;font-weight:700;display:block;margin:9px 0 5px}.note{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px;font-size:12px;line-height:1.5}
-.badge{display:inline-block;border-radius:999px;background:#eef2f6;padding:3px 7px;font-size:11px}.ok{color:#087443}.err{color:#b42318}
-@media(max-width:800px){.grid{grid-template-columns:1fr}.files{max-height:35vh}}
+:root{--bg:#0b1020;--card:#141b2d;--card2:#1b2540;--text:#eef3ff;--muted:#9aa8c5;--accent:#62a8ff;--ok:#54d18a;--warn:#ffcc66;--danger:#ff6b7a;--border:#2b3958}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#09101f,#0d1426);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif}header{padding:18px 16px 10px;position:sticky;top:0;background:#0b1020ee;backdrop-filter:blur(12px);z-index:10;border-bottom:1px solid var(--border)}h1{font-size:20px;margin:0 0 4px}.sub{font-size:12px;color:var(--muted)}main{padding:14px;max-width:1100px;margin:auto}.bar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.btn,input,select,textarea{font:inherit}button,.filebtn{border:1px solid var(--border);background:var(--card2);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer}button.primary{background:#235caa;border-color:#3979ca}button.ok{background:#175d3a;border-color:#2b9b65}button:disabled{opacity:.45;cursor:not-allowed}.filebtn{display:inline-flex;align-items:center}.filebtn input{display:none}.status{padding:10px 12px;background:#10182b;border:1px solid var(--border);border-radius:10px;color:var(--muted);margin:10px 0}.tabs{display:flex;gap:6px;overflow:auto;padding:6px 0;position:sticky;top:72px;background:#0b1020ee;z-index:9}.tab{white-space:nowrap}.tab.active{background:#235caa}.panel{display:none}.panel.active{display:block}.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin:10px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}.field input,.field select,.field textarea{width:100%;background:#0e1628;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px}.field textarea{min-height:100px;font-family:ui-monospace,monospace}.title{font-weight:700;margin-bottom:10px}.small{font-size:12px;color:var(--muted)}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid var(--border);padding:8px;text-align:left}th{color:#b9c7e4}.scroll{overflow:auto;max-height:480px}.pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#223252;color:#b9c7e4;font-size:11px;margin-right:4px}.danger{color:var(--danger)}.oktext{color:var(--ok)}.mapgrid{display:grid;grid-template-columns:repeat(32,18px);gap:1px;overflow:auto;padding:6px;background:#09101c;border-radius:8px}.tile{width:18px;height:18px;border:0;padding:0;border-radius:2px;background:#1c273c}.tile.free{background:#245b3f}.tile.solid{background:#7a3540}.tile.special{background:#6b5a2a}.hex{font-family:ui-monospace,SFMono-Regular,monospace;white-space:pre;overflow:auto;background:#080d17;border:1px solid #202c45;padding:10px;border-radius:8px;min-height:160px}.notice{border-left:3px solid var(--warn);padding:8px 10px;background:#1b1820;color:#d8d0bc;border-radius:6px;font-size:12px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.right{margin-left:auto}.hidden{display:none}
 </style>
 </head>
 <body>
-<div class="wrap">
-<div class="top"><div><h1>Promax 心金 ROM Editor</h1><div class="muted">NDS 檔案系統 + NARC + Hex 編輯器（瀏覽器本機處理）</div></div>
-<div class="row"><input id="rom" type="file" accept=".nds"><button id="save" class="primary" disabled>匯出修改後 ROM</button></div></div>
-
-<div class="panel">
-<div class="row">
-<span id="romInfo" class="badge">尚未載入 ROM</span>
-<input id="filter" class="grow" placeholder="搜尋檔案，例如 a/0/0/">
-<button id="scan">重新掃描</button>
+<header><h1>Promax 心金 HGSS ROM Editor v2</h1><div class="sub">iPhone Safari 可用・瀏覽器直接修改 NDS ROM・不需上傳到伺服器</div></header>
+<main>
+<div class="bar"><label class="filebtn">📦 選擇 .nds ROM<input id="romFile" type="file" accept=".nds,application/octet-stream"></label><button id="saveBtn" class="ok" disabled>⬇️ 匯出修改後 ROM</button><button id="resetBtn">↩️ 還原本次修改</button></div>
+<div id="status" class="status">尚未載入 ROM。請選擇你有權修改的 Pokémon HeartGold .nds。</div>
+<div class="tabs">
+<button class="tab active" data-tab="home">總覽</button><button class="tab" data-tab="pokemon">寶可夢</button><button class="tab" data-tab="moves">招式</button><button class="tab" data-tab="items">道具</button><button class="tab" data-tab="learn">學招/進化</button><button class="tab" data-tab="enc">野生遇敵</button><button class="tab" data-tab="map">地圖</button><button class="tab" data-tab="hex">NARC/Hex</button>
 </div>
-<div id="status" class="muted" style="margin-top:8px">請選擇你自己的 .nds ROM。</div>
-</div>
-
-<div class="grid">
-<aside class="panel">
-<b>NDS ROM 檔案系統</b>
-<div class="muted" style="margin:5px 0 9px">點選檔案後可查看內容；NARC 會顯示內部檔案。</div>
-<div id="files" class="files"></div>
-</aside>
-
-<main class="panel">
-<div id="detail"><div class="muted">尚未選擇檔案</div></div>
+<section id="home" class="panel active">
+<div class="card"><div class="title">目前 ROM</div><div id="romInfo" class="small">尚未載入</div></div>
+<div class="card"><div class="title">v2 已加入</div><div class="grid"><div>🟢 寶可夢能力值/屬性/特性/捕獲率/經驗</div><div>🟢 招式威力/命中/PP/屬性/分類/優先度</div><div>🟢 道具價格/持有/投擲/自然恩惠/使用參數</div><div>🟢 升級學招與進化資料</div><div>🟢 野生遇敵 12 個時段/釣竿/衝浪等欄位</div><div>🟢 地圖 32×32 移動權限與 3D 物件座標</div></div></div>
+<div class="notice">安全設計：第一版只做「原地修改」，不新增 NARC 成員、不改檔案長度，因此可直接寫回原 ROM 的 FAT 區段。地圖 3D 模型本身暫不重建。</div>
+</section>
+<section id="pokemon" class="panel"><div class="card"><div class="title">寶可夢 Personal Data · /a/0/0/2</div><div class="small">HGSS Personal NARC 每筆固定 332 bytes，共 1412 筆。選擇 ID 後修改並按「套用」。</div><div class="bar"><div class="field"><label>寶可夢 ID</label><input id="pokeId" type="number" min="1" max="1411" value="1"></div><button id="pokeLoad" class="primary">讀取</button><button id="pokeApply" class="ok">套用</button></div><div id="pokeFields" class="grid"></div></div></section>
+<section id="moves" class="panel"><div class="card"><div class="title">招式資料 · /a/0/1/1</div><div class="small">每筆 24 bytes。欄位依 HGSS Move Data 結構解碼。</div><div class="bar"><div class="field"><label>招式 ID</label><input id="moveId" type="number" min="1" max="926" value="1"></div><button id="moveLoad" class="primary">讀取</button><button id="moveApply" class="ok">套用</button></div><div id="moveFields" class="grid"></div></div></section>
+<section id="items" class="panel"><div class="card"><div class="title">道具資料 · /a/0/1/7</div><div class="small">每筆 36 bytes。先提供可安全原地修改的核心數值與效果欄位；其餘未知欄位保留。</div><div class="bar"><div class="field"><label>道具 ID</label><input id="itemId" type="number" min="1" max="885" value="1"></div><button id="itemLoad" class="primary">讀取</button><button id="itemApply" class="ok">套用</button></div><div id="itemFields" class="grid"></div></div></section>
+<section id="learn" class="panel"><div class="card"><div class="title">升級學招 · /a/0/3/3</div><div class="bar"><div class="field"><label>寶可夢 ID</label><input id="learnId" type="number" min="1" max="1411" value="1"></div><button id="learnLoad" class="primary">讀取</button><button id="learnApply" class="ok">套用</button></div><div id="learnFields"></div></div><div class="card"><div class="title">進化 · /a/0/3/4</div><div class="small">每筆 74 bytes；每條進化 6 bytes。可修改 7 條進化。</div><div class="bar"><div class="field"><label>寶可夢 ID</label><input id="evoId" type="number" min="1" max="1411" value="1"></div><button id="evoLoad" class="primary">讀取</button><button id="evoApply" class="ok">套用</button></div><div id="evoFields"></div></div></section>
+<section id="enc" class="panel"><div class="card"><div class="title">野生遇敵 · /a/0/3/7</div><div class="small">每張 encounter 檔 196 bytes；ID 由 NARC 成員索引。可直接修改 12 個草叢/時段與釣竿等核心欄位。</div><div class="bar"><div class="field"><label>Encounter File ID</label><input id="encId" type="number" min="0" max="141" value="0"></div><button id="encLoad" class="primary">讀取</button><button id="encApply" class="ok">套用</button></div><div id="encFields"></div></div></section>
+<section id="map" class="panel"><div class="card"><div class="title">地圖資料 · /a/0/6/5</div><div class="small">地圖檔每張包含 Header、未知資料、32×32 移動權限、3D 物件、NSBMD、BDHC。這版可修改 32×32 移動權限與 3D 物件座標。</div><div class="bar"><div class="field"><label>Map File ID</label><input id="mapId" type="number" min="0" max="698" value="0"></div><button id="mapLoad" class="primary">讀取</button><button id="mapApply" class="ok">套用地圖</button></div><div id="mapInfo"></div><div id="mapGrid" class="mapgrid"></div><div id="objects"></div></div></section>
+<section id="hex" class="panel"><div class="card"><div class="title">NARC / Hex</div><div class="bar"><div class="field"><label>路徑</label><select id="narcPath"><option>/a/0/0/2</option><option>/a/0/1/1</option><option>/a/0/1/7</option><option>/a/0/3/3</option><option>/a/0/3/4</option><option>/a/0/3/7</option><option>/a/0/3/2</option><option>/a/0/6/5</option></select></div><div class="field"><label>Member ID</label><input id="narcMember" type="number" min="0" value="0"></div><button id="hexLoad" class="primary">顯示 Hex</button><button id="hexApply" class="ok">套用 Hex</button></div><textarea id="hexInput" class="field" style="width:100%;height:260px;background:#080d17;color:#eef3ff;border:1px solid #2b3958;border-radius:8px;padding:10px;font-family:ui-monospace,monospace" placeholder="輸入空白分隔的十六進位，例如 01 02 FF"></textarea></div></section>
 </main>
-</div>
-</div>
-
 <script>
-(() => {
-let rom=null, originalName="edited.nds", entries=[], selected=null, selectedData=null, selectedOffset=0, dirty=false;
-
-const $=id=>document.getElementById(id);
-const u32=(a,o)=>a[o]|(a[o+1]<<8)|(a[o+2]<<16)|(a[o+3]<<24>>>0);
-const u16=(a,o)=>a[o]|(a[o+1]<<8);
-function str(a,o,n){return new TextDecoder("ascii").decode(a.subarray(o,o+n)).replace(/\0+$/,"")}
-function hexDump(a,start=0,len=512){
- let end=Math.min(a.length,start+len), out=[];
- for(let i=start;i<end;i+=16){
-  let c=a.subarray(i,Math.min(i+16,end)), h=Array.from(c,x=>x.toString(16).padStart(2,"0").toUpperCase());
-  while(h.length<16)h.push("  ");
-  let s=Array.from(c,x=>x>=32&&x<=126?String.fromCharCode(x):".").join("");
-  out.push(i.toString(16).padStart(8,"0").toUpperCase()+"  "+h.join(" ")+"  "+s);
- }
- return out.join("\n");
-}
-function ascii(a,o,n){return new TextDecoder("ascii").decode(a.subarray(o,Math.min(a.length,o+n)))}
-function readFNT(){
- const off=u32(rom,0x40), size=u32(rom,0x44), f=rom.subarray(off,off+size);
- const rootStart=u32(f,0), rootFirst=u16(f,4), rootParent=u16(f,6);
- const dirs=[{id:0xF000,start:rootStart,first:rootFirst,parent:rootParent,path:""}];
- let pos=8, count=0;
- // Directory table begins at 8, one 8-byte record per directory. Root first index gives first file id.
- // Build records by traversing IDs from root's directory index. NDS directory IDs are 0xF000 + index.
- function getDir(id){let idx=id-0xF000; let p=8+idx*8; if(p<8||p+8>f.length)return null; return {start:u32(f,p),first:u16(f,p+4),parent:u16(f,p+6)}}
- const result=[];
- function walk(id,path,depth){
-  if(depth>40)return;
-  const d=getDir(id); if(!d)return;
-  let p=d.start, fileId=d.first;
-  while(p<f.length){
-   const n=f[p++]; if(n===0)break;
-   const isDir=(n&0x80)!==0, len=n&0x7f;
-   if(p+len>f.length)break;
-   const name=new TextDecoder("shift-jis").decode(f.subarray(p,p+len)); p+=len;
-   if(isDir){
-    if(p+2>f.length)break; const child=u16(f,p); p+=2;
-    walk(child,path+name+"/",depth+1);
-   }else{
-    result.push({id:fileId++,path:path+name});
-   }
-  }
- }
- walk(0xF000,"",0);
- return result;
-}
-function loadEntries(){
- const fatOff=u32(rom,0x48), fatSize=u32(rom,0x4c), count=Math.floor(fatSize/8);
- const fnt=readFNT();
- const map=new Map(fnt.map(x=>[x.id,x.path]));
- entries=[];
- for(let i=0;i<count;i++){
-  const s=u32(rom,fatOff+i*8), e=u32(rom,fatOff+i*8+4);
-  entries.push({id:i,path:map.get(i)||`<unnamed file ${i}>`,start:s,end:e,size:e-s});
- }
-}
-function renderList(){
- const q=$("filter").value.trim().toLowerCase();
- const box=$("files"); box.innerHTML="";
- const frag=document.createDocumentFragment();
- entries.filter(e=>e.path.toLowerCase().includes(q)).forEach(e=>{
-  const d=document.createElement("div"); d.className="file"+(selected?.id===e.id?" sel":"");
-  d.textContent=`#${e.id}  ${e.path}  (${e.size.toLocaleString()} B)`;
-  d.addEventListener("click",()=>selectFile(e));
-  frag.appendChild(d);
- });
- box.appendChild(frag);
- $("status").textContent=`已解析 ${entries.length.toLocaleString()} 個 ROM 檔案`;
-}
-function isNarc(a){return a.length>=4 && ascii(a,0,4)==="NARC"}
-function narcInfo(a){
- if(!isNarc(a))return null;
- let btaf=a.indexOf(0x42,4); // marker only; exact parsing below
- const out={files:0,blocks:[]};
- let p=16;
- while(p+8<=a.length){
-  const tag=ascii(a,p,4), sz=u32(a,p+4);
-  if(!tag||sz<8||p+sz>a.length)break;
-  out.blocks.push({tag,offset:p,size:sz});
-  if(tag==="BTAF") out.files=u32(a,p+8)/8;
-  p+=sz;
- }
- return out;
-}
-function selectFile(e){
- selected=e; selectedOffset=0;
- selectedData=rom.slice(e.start,e.end);
- renderList(); renderDetail();
-}
-function renderDetail(){
- if(!selected){$("detail").innerHTML='<div class="muted">尚未選擇檔案</div>';return}
- const n=narcInfo(selectedData);
- $("detail").innerHTML=`
- <div class="row"><b style="word-break:break-all">${selected.path}</b><span class="badge">ID ${selected.id}</span><span class="badge">${selected.size.toLocaleString()} B</span>${n?'<span class="badge">NARC</span>':''}</div>
- <div class="row" style="margin-top:10px">
-  <input id="off" class="grow" placeholder="Offset，例如 0x100" value="0x0">
-  <input id="showlen" value="512" style="width:90px">
-  <button id="jump">查看</button>
- </div>
- <div id="narcbox"></div>
- <div class="hex" id="dump" style="margin-top:10px">${hexDump(selectedData)}</div>
- <div class="panel" style="padding:10px;margin-top:10px">
-  <b>修改此 ROM 檔案</b>
-  <div class="row" style="margin-top:8px"><input id="wo" class="grow" placeholder="Offset，例如 0x100"><input id="wb" class="grow" placeholder="Hex，例如 90 FF 00"><button id="write" class="primary">寫入</button></div>
-  <div id="ws" class="muted"></div>
- </div>`;
- $("jump").onclick=()=>{let o=parseOff($("off").value);if(o===null||o>=selectedData.length)return;selectedOffset=o;$("dump").textContent=hexDump(selectedData,o,Math.min(parseInt($("showlen").value)||512,2048));};
- $("write").onclick=writeBytes;
- if(n)renderNarc(n);
-}
-function renderNarc(n){
- const box=$("narcbox"); box.innerHTML=`<div class="note" style="margin-top:10px"><b>NARC:</b> ${n.files||"?"} 個內部檔案；區塊：${n.blocks.map(x=>x.tag).join(", ")}</div>`;
- // Show BTAF entries when structurally valid.
- const b=n.blocks.find(x=>x.tag==="BTAF");
- if(!b)return;
- const count=u32(selectedData,b.offset+8)/8, table=b.offset+16;
- let rows=[];
- for(let i=0;i<count && table+i*8+8<=selectedData.length;i++){
-  const s=u32(selectedData,table+i*8),e=u32(selectedData,table+i*8+4);
-  rows.push(`<option value="${i}">NARC #${i} · ${s}–${e} (${Math.max(0,e-s)} B)</option>`);
- }
- box.innerHTML+=`<div class="row" style="margin-top:8px"><select id="nsel" class="grow">${rows.join("")}</select><button id="nview">查看內部檔案</button></div>`;
- $("nview").onclick=()=>{
-  const i=parseInt($("nsel").value),s=u32(selectedData,table+i*8),e=u32(selectedData,table+i*8+4);
-  if(e>s&&e<=selectedData.length){$("off").value="0x"+s.toString(16).toUpperCase();selectedOffset=s;$("dump").textContent=hexDump(selectedData,s,Math.min(e-s,2048));}
- };
-}
-function parseOff(v){v=String(v).trim();if(!v)return null;let n=/^0x/i.test(v)?parseInt(v,16):parseInt(v,10);return Number.isFinite(n)&&n>=0?n:null}
-function parseBytes(v){let p=String(v).trim().split(/\s+/).filter(Boolean);if(!p.length)return null;let a=[];for(const x of p){if(!/^[0-9a-fA-F]{1,2}$/.test(x))return null;a.push(parseInt(x,16))}return new Uint8Array(a)}
-function writeBytes(){
- if(!selected)return;
- const o=parseOff($("wo").value),b=parseBytes($("wb").value);
- if(o===null||!b||o+b.length>selectedData.length){$("ws").textContent="Offset 或 Hex 格式錯誤";return}
- selectedData.set(b,o);rom.set(b,selected.start+o);dirty=true;$("save").disabled=false;
- $("ws").textContent=`已修改 ${b.length} bytes；目前仍在瀏覽器記憶體中。`;
- $("dump").textContent=hexDump(selectedData,Math.max(0,o-32),512);
-}
-$("rom").onchange=async e=>{
- const f=e.target.files?.[0];if(!f)return;
- rom=new Uint8Array(await f.arrayBuffer());originalName=f.name;dirty=false;
- try{
-  const title=ascii(rom,0,12).replace(/\0/g," ").trim(),code=ascii(rom,0x0c,4);
-  loadEntries();$("romInfo").textContent=`${title} · Game Code ${code} · ${rom.length.toLocaleString()} B`;
-  $("save").disabled=false;renderList();
- }catch(err){$("status").textContent="解析失敗："+err.message}
-};
-$("filter").oninput=renderList;$("scan").onclick=()=>{if(rom){loadEntries();renderList()}};
-$("save").onclick=()=>{
- if(!rom)return;
- const blob=new Blob([rom],{type:"application/octet-stream"}),a=document.createElement("a");
- a.href=URL.createObjectURL(blob);
- a.download=(originalName.toLowerCase().endsWith(".nds")?originalName.slice(0,-4):originalName)+"-edited.nds";
- a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
- $("status").textContent="已匯出修改後 ROM。";
-};
-})();
+'use strict';
+let original=null, rom=null, fileName='modified.nds', fs=null, narcCache=new Map(), dirty=false;
+const $=id=>document.getElementById(id); const u8=()=>new Uint8Array(rom); const dv=()=>new DataView(rom);
+function setStatus(s,ok=false){$('status').textContent=s;$('status').style.color=ok?'#54d18a':'#9aa8c5'}
+function hex(n,w=2){return n.toString(16).toUpperCase().padStart(w,'0')}
+function read16(a){return new DataView(rom).getUint16(a,true)} function read32(a){return new DataView(rom).getUint32(a,true)}
+function write16(a,v){new DataView(rom).setUint16(a,Number(v)&65535,true)} function write32(a,v){new DataView(rom).setUint32(a,Number(v)>>>0,true)}
+function bytesToHex(a){return [...a].map(x=>hex(x)).join(' ')}
+function parseHex(s){return new Uint8Array(s.trim().split(/\s+/).filter(Boolean).map(x=>parseInt(x,16)).filter(x=>Number.isFinite(x)&&x>=0&&x<=255))}
+function parseFNT(){let foff=read32(0x40), fsize=read32(0x44), fat=read32(0x48), paths={};
+ function dir(did,path){let idx=did&0xFFF, p=foff+idx*8, sub=read32(p), first=read16(p+4), pos=foff+sub, fid=first;while(true){let n=rom[pos++];if(n===0)break;let isdir=n&0x80,len=n&0x7f,name=new TextDecoder('latin1').decode(rom.slice(pos,pos+len));pos+=len;if(isdir){let dd=read16(pos);pos+=2;dir(dd,path+'/'+name)}else{let st=read32(fat+fid*8),en=read32(fat+fid*8+4);paths[path+'/'+name]={fid,st,en};fid++}}}
+ dir(0,'');return {foff,fsize,fat,paths};}
+function narcParse(st,en){let a=rom.slice(st,en);if(new TextDecoder().decode(a.slice(0,4))!=='NARC')throw Error('不是 NARC');let btaf=-1,gmif=-1,q=0x10;while(q<a.length){let tag=new TextDecoder().decode(a.slice(q,q+4)),sz=new DataView(a.buffer,a.byteOffset+q+4,4).getUint32(0,true);if(tag==='BTAF')btaf=q;if(tag==='GMIF')gmif=q;q+=sz;if(sz<8)break}let n=new DataView(a.buffer,a.byteOffset+btaf+8,2).getUint16(0,true), files=[];for(let i=0;i<n;i++){let s=new DataView(a.buffer,a.byteOffset+btaf+12+i*8,4).getUint32(0,true),e=new DataView(a.buffer,a.byteOffset+btaf+16+i*8,4).getUint32(0,true);files.push({s,e})}return {st,en,a,btaf,gmif,files,member:i=>a.slice(gmif+8+i.s,gmif+8+i.e)} }
+function getNarc(path){if(!fs?.paths[path])throw Error('找不到 '+path);if(!narcCache.has(path)){let x=fs.paths[path];narcCache.set(path,narcParse(x.st,x.en))}return narcCache.get(path)}
+function memberBytes(path,id){let n=getNarc(path);if(id<0||id>=n.files.length)throw Error('Member ID 超出範圍');let f=n.files[id];return n.a.slice(n.gmif+8+f.s,n.gmif+8+f.e)}
+function patchMember(path,id,newBytes){let n=getNarc(path),f=n.files[id];if(newBytes.length!==f.e-f.s)throw Error('此版本只允許原地修改，長度必須維持 '+(f.e-f.s)+' bytes');let abs=n.st+n.gmif+8+f.s;rom.set(newBytes,abs);n.a.set(newBytes,n.gmif+8+f.s);dirty=true;$('saveBtn').disabled=false;}
+function field(label,id,value,max=255){return `<div class="field"><label>${label}</label><input id="${id}" type="number" min="0" max="${max}" value="${value}"></div>`}
+function getVal(id){return Number($(id).value)||0}
+function loadRom(file){file.arrayBuffer().then(buf=>{original=new Uint8Array(buf);rom=original.slice();fileName=file.name.replace(/\.nds$/i,'')+'_edited.nds';fs=parseFNT();narcCache.clear();dirty=false;$('saveBtn').disabled=false;let code=new TextDecoder().decode(rom.slice(0x0c,0x10));$('romInfo').innerHTML=`<b>${file.name}</b><br>Game Code: <span class="pill">${code}</span><br>大小：${(rom.length/1048576).toFixed(1)} MiB<br>FNT: 0x${hex(read32(0x40),8)} / ${read32(0x44)} bytes　FAT: 0x${hex(read32(0x48),8)} / ${read32(0x4c)} bytes`;
+if(code!=='IPKJ')setStatus('⚠️ Game Code 不是常見的英文版 HeartGold IPKJ；仍可嘗試，但欄位可能不同。');else setStatus('ROM 載入完成，可以開始修改。',true);}) .catch(e=>setStatus('載入失敗：'+e.message))}
+$('romFile').onchange=e=>{let f=e.target.files[0];if(f)loadRom(f)};
+$('saveBtn').onclick=()=>{if(!rom)return;let blob=new Blob([rom],{type:'application/octet-stream'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileName;a.click();setStatus('已匯出 '+fileName,true)};
+$('resetBtn').onclick=()=>{if(original){rom=original.slice();narcCache.clear();dirty=false;setStatus('已還原本次修改。');loadCurrentIfAny()}};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
+function loadCurrentIfAny(){if($('pokemon').classList.contains('active'))loadPoke();if($('moves').classList.contains('active'))loadMove();if($('items').classList.contains('active'))loadItem()}
+function pokeData(id){let a=memberBytes('/a/0/0/2',id);let ev=new DataView(a.buffer,a.byteOffset,a.byteLength);return {a, hp:a[0],atk:a[1],def:a[2],spd:a[3],spa:a[4],spd2:a[5],type1:a[6],type2:a[7],catch:a[8],exp:a[9],ev:a[10]|(a[11]<<8),held50:ev.getUint16(12,true),held5:ev.getUint16(14,true),gender:a[16],hatch:a[17],happiness:a[18],growth:a[19],egg1:a[20],egg2:a[21],ability1:a[22],ability2:a[23],run:a[24],color:a[25]}}
+function loadPoke(){if(!rom)return;let id=getVal('pokeId'),p=pokeData(id),f='';f+=field('HP','ph',p.hp);f+=field('攻擊','pa',p.atk);f+=field('防禦','pd',p.def);f+=field('速度','ps',p.spd);f+=field('特攻','psa',p.spa);f+=field('特防','psd',p.spd2);f+=field('屬性1 ID','pt1',p.type1);f+=field('屬性2 ID','pt2',p.type2);f+=field('捕獲率','pc',p.catch);f+=field('基礎經驗','pe',p.exp);f+=field('50%持有道具 ID','p50',p.held50,65535);f+=field('5%持有道具 ID','p5',p.held5,65535);f+=field('性別比例','pg',p.gender);f+=field('孵化倍率','phatch',p.hatch);f+=field('基礎親密度','phap',p.happiness);f+=field('經驗成長 ID','pgrow',p.growth);f+=field('蛋群1 ID','peg1',p.egg1);f+=field('蛋群2 ID','peg2',p.egg2);f+=field('特性1 ID','pa1',p.ability1);f+=field('特性2 ID','pa2',p.ability2);f+=field('Safari逃跑率','prun',p.run);f+=field('圖鑑顏色 ID','pcol',p.color);$('pokeFields').innerHTML=f}
+$('pokeLoad').onclick=loadPoke;$('pokeApply').onclick=()=>{let id=getVal('pokeId'),a=memberBytes('/a/0/0/2',id);a[0]=getVal('ph');a[1]=getVal('pa');a[2]=getVal('pd');a[3]=getVal('ps');a[4]=getVal('psa');a[5]=getVal('psd');a[6]=getVal('pt1');a[7]=getVal('pt2');a[8]=getVal('pc');a[9]=getVal('pe');writeA16(a,12,getVal('p50'));writeA16(a,14,getVal('p5'));a[16]=getVal('pg');a[17]=getVal('phatch');a[18]=getVal('phap');a[19]=getVal('pgrow');a[20]=getVal('peg1');a[21]=getVal('peg2');a[22]=getVal('pa1');a[23]=getVal('pa2');a[24]=getVal('prun');a[25]=getVal('pcol');patchMember('/a/0/0/2',id,a);setStatus('寶可夢資料已套用。',true)};
+function writeA16(a,o,v){a[o]=v&255;a[o+1]=(v>>8)&255}
+function loadMove(){if(!rom)return;let id=getVal('moveId'),a=memberBytes('/a/0/1/1',id),d=new DataView(a.buffer,a.byteOffset,a.length);let vals={effect:d.getUint16(0,true),split:a[2],power:a[3],type:a[4],acc:a[5],pp:a[6],chance:a[7],target:d.getUint16(8,true),priority:a[10],flags:a[11],contestEffect:a[12],contestType:a[13]};let f='';f+=field('Battle Effect ID','me',vals.effect,65535);f+=field('分類/Split ID','ms',vals.split);f+=field('威力','mp',vals.power);f+=field('屬性 ID','mt',vals.type);f+=field('命中率','mac',vals.acc);f+=field('PP','mpp',vals.pp);f+=field('追加效果機率','mc',vals.chance);f+=field('Target ID','mta',vals.target,65535);f+=field('Priority','mpr',vals.priority,255);f+=field('Flags','mf',vals.flags,255);f+=field('Contest Effect','mce',vals.contestEffect,255);f+=field('Contest Type','mct',vals.contestType,255);$('moveFields').innerHTML=f}
+$('moveLoad').onclick=loadMove;$('moveApply').onclick=()=>{let id=getVal('moveId'),a=memberBytes('/a/0/1/1',id),d=new DataView(a.buffer,a.byteOffset,a.length);d.setUint16(0,getVal('me')&65535,true);a[2]=getVal('ms');a[3]=getVal('mp');a[4]=getVal('mt');a[5]=getVal('mac');a[6]=getVal('mpp');a[7]=getVal('mc');d.setUint16(8,getVal('mta')&65535,true);a[10]=getVal('mpr');a[11]=getVal('mf');a[12]=getVal('mce');a[13]=getVal('mct');patchMember('/a/0/1/1',id,a);setStatus('招式資料已套用。',true)};
+function loadItem(){if(!rom)return;let id=getVal('itemId'),a=memberBytes('/a/0/1/7',id),d=new DataView(a.buffer,a.byteOffset,a.length);let f='';f+=field('價格 (u16)','iprice',d.getUint16(0,true),65535);f+=field('Hold Effect','ihe',a[2]);f+=field('Hold Effect Param','ihp',a[3]);f+=field('Pluck Effect','ipe',a[4]);f+=field('Fling Effect','ife',a[5]);f+=field('Fling Power','ifp',a[6]);f+=field('Natural Gift Power','ingp',a[7]);f+=field('Natural Gift Type','ingt',a[8]);f+=field('Pocket/Use bits','ipock',a[9],255);f+=field('Field Use Func','ifield',a[10],255);f+=field('Battle Use Func','ibattle',a[11],255);f+=field('Party Use Param 1','ipp1',a[12],255);f+=field('Party Use Param 2','ipp2',a[13],255);f+=field('Party Use Param 3','ipp3',a[14],255);f+='<div class="notice">後續 bytes 保留原值。道具名稱與說明文字位於訊息 NARC，不在這筆 36-byte item record 內。</div>';$('itemFields').innerHTML=f}
+$('itemLoad').onclick=loadItem;$('itemApply').onclick=()=>{let id=getVal('itemId'),a=memberBytes('/a/0/1/7',id),d=new DataView(a.buffer,a.byteOffset,a.length);d.setUint16(0,getVal('iprice')&65535,true);a[2]=getVal('ihe');a[3]=getVal('ihp');a[4]=getVal('ipe');a[5]=getVal('ife');a[6]=getVal('ifp');a[7]=getVal('ingp');a[8]=getVal('ingt');a[9]=getVal('ipock');a[10]=getVal('ifield');a[11]=getVal('ibattle');a[12]=getVal('ipp1');a[13]=getVal('ipp2');a[14]=getVal('ipp3');patchMember('/a/0/1/7',id,a);setStatus('道具資料已套用。',true)};
+function loadLearn(){if(!rom)return;let id=getVal('learnId'),a=memberBytes('/a/0/3/3',id),rows=[];for(let i=0;i+1<a.length;i+=2){let v=a[i]|a[i+1]<<8;if(v===0xffff)break;rows.push({move:v&0x1ff,level:v>>9,raw:v})}let h='<table><tr><th>#</th><th>Move ID</th><th>Level</th></tr>';rows.forEach((r,i)=>h+=`<tr><td>${i+1}</td><td><input data-li="${i}" class="lmove" type="number" min="0" max="511" value="${r.move}"></td><td><input data-ll="${i}" class="llevel" type="number" min="0" max="127" value="${r.level}"></td></tr>`);h+='</table><div class="small">此版只修改既有條目，不增加超過原檔案可容納的學招數量。</div>';$('learnFields').innerHTML=h}
+$('learnLoad').onclick=loadLearn;$('learnApply').onclick=()=>{let id=getVal('learnId'),a=memberBytes('/a/0/3/3',id),rows=[...document.querySelectorAll('.lmove')];rows.forEach((el,i)=>{let m=Number(el.value)&511,l=Number(document.querySelector(`[data-ll="${i}"]`).value)&127,v=m|(l<<9);a[i*2]=v&255;a[i*2+1]=v>>8});patchMember('/a/0/3/3',id,a);setStatus('升級學招已套用。',true)};
+function loadEvo(){if(!rom)return;let id=getVal('evoId'),a=memberBytes('/a/0/3/4',id),h='<table><tr><th>#</th><th>Method</th><th>Requirement</th><th>Evolved ID</th></tr>';for(let i=0;i<7;i++){let o=i*6;h+=`<tr><td>${i+1}</td><td><input class="em" data-e="${o}" type="number" min="0" max="255" value="${a[o]}"></td><td><input class="er" data-e="${o+2}" type="number" min="0" max="65535" value="${a[o+2]|a[o+3]<<8}"></td><td><input class="et" data-e="${o+4}" type="number" min="0" max="65535" value="${a[o+4]|a[o+5]<<8}"></td></tr>`}h+='</table>';$('evoFields').innerHTML=h}
+$('evoLoad').onclick=loadEvo;$('evoApply').onclick=()=>{let id=getVal('evoId'),a=memberBytes('/a/0/3/4',id);document.querySelectorAll('[data-e]').forEach(el=>{let o=Number(el.dataset.e),v=Number(el.value)||0;if(el.classList.contains('em'))a[o]=v&255;else {a[o]=v&255;a[o+1]=(v>>8)&255}});patchMember('/a/0/3/4',id,a);setStatus('進化資料已套用。',true)};
+function loadEnc(){if(!rom)return;let id=getVal('encId'),a=memberBytes('/a/0/3/7',id),h='<div class="small">遭遇率：'+[...a.slice(0,6)].join(' / ')+'</div><table><tr><th>時段</th><th>Slot</th><th>Pokémon ID</th><th>Level</th></tr>';let sections=[['早晨',8,12],['白天',32,12],['傍晚',56,12]];sections.forEach(([name,base,count])=>{for(let i=0;i<count;i++){let o=base+i*2;h+=`<tr><td>${name}</td><td>${i+1}</td><td><input class="ep" data-o="${o}" type="number" min="0" max="65535" value="${a[o]|a[o+1]<<8}"></td><td><input class="el" data-o="${o+24}" type="number" min="0" max="100" value="${a[o+24]||0}"></td></tr>`}});h+='</table><div class="small">這裡使用 HGSS Field Encounter 固定區段的核心欄位；不同 encounter 類型後續欄位仍保留。</div>';$('encFields').innerHTML=h}
+$('encLoad').onclick=loadEnc;$('encApply').onclick=()=>{let id=getVal('encId'),a=memberBytes('/a/0/3/7',id);document.querySelectorAll('.ep').forEach(el=>{let o=Number(el.dataset.o),v=Number(el.value)||0;a[o]=v&255;a[o+1]=v>>8});document.querySelectorAll('.el').forEach(el=>a[Number(el.dataset.o)]=Number(el.value)||0);patchMember('/a/0/3/7',id,a);setStatus('野生遇敵已套用。',true)};
+function parseMap(a){let d=new DataView(a.buffer,a.byteOffset,a.length),perm=d.getUint32(0,true),obj=d.getUint32(4,true),model=d.getUint32(8,true),bdhc=d.getUint32(12,true),unk=d.getUint32(16,true);let permOff=20+unk,objOff=permOff+perm;return {a,perm,obj,model,bdhc,unk,permOff,objOff,count:Math.floor(obj/48)}}
+function loadMap(){if(!rom)return;let id=getVal('mapId'),a=memberBytes('/a/0/6/5',id),m=parseMap(a);$('mapInfo').innerHTML=`<div class="small">Permission: ${m.perm} bytes　Unknown: ${m.unk}　Objects: ${m.obj} bytes (${m.count} objects)　NSBMD: ${m.model}　BDHC: ${m.bdhc}</div>`;let g='';for(let y=0;y<32;y++)for(let x=0;x<32;x++){let o=m.permOff+(y*32+x)*2,sp=a[o],mv=a[o+1],cl=mv===8?'solid':sp?'special':'free';g+=`<button class="tile ${cl}" title="X${x} Y${y} special=${sp.toString(16)} move=${mv.toString(16)}" data-mapoff="${o}"></button>`}$('mapGrid').innerHTML=g;document.querySelectorAll('.tile').forEach(t=>t.onclick=()=>{let o=Number(t.dataset.mapoff),a2=memberBytes('/a/0/6/5',id),cur=a2[o+1],nv=cur===0?8:cur===8?4:0;a2[o+1]=nv;t.className='tile '+(nv===8?'solid':nv===0?'free':'special');t.title=`move=${nv.toString(16)}`;patchMember('/a/0/6/5',id,a2)});let h='<div class="title" style="margin-top:12px">3D 物件</div><div class="scroll"><table><tr><th>#</th><th>Object ID</th><th>Y</th><th>Z</th><th>X</th></tr>';for(let i=0;i<m.count;i++){let o=m.objOff+i*48,dv=new DataView(a.buffer,a.byteOffset+o,48);h+=`<tr><td>${i}</td><td><input class="mo" data-o="${o}" type="number" value="${dv.getUint32(0,true)}"></td><td><input class="my" data-o="${o}" type="number" value="${dv.getInt16(6,true)}"></td><td><input class="mz" data-o="${o}" type="number" value="${dv.getInt16(10,true)}"></td><td><input class="mx" data-o="${o}" type="number" value="${dv.getInt16(14,true)}"></td></tr>`}h+='</table></div>';$('objects').innerHTML=h}
+$('mapLoad').onclick=loadMap;$('mapApply').onclick=()=>{let id=getVal('mapId'),a=memberBytes('/a/0/6/5',id);document.querySelectorAll('.mo').forEach(e=>{let o=Number(e.dataset.o);new DataView(a.buffer,a.byteOffset+o,4).setUint32(0,Number(e.value)>>>0,true)});['my','mz','mx'].forEach((cls,k)=>document.querySelectorAll('.'+cls).forEach(e=>{let o=Number(e.dataset.o)+[6,10,14][k];new DataView(a.buffer,a.byteOffset+o,2).setInt16(0,Number(e.value)||0,true)}));patchMember('/a/0/6/5',id,a);setStatus('地圖資料已套用。',true)};
+$('hexLoad').onclick=()=>{if(!rom)return;let p=$('narcPath').value,id=getVal('narcMember'),a=memberBytes(p,id);$('hexInput').value=bytesToHex(a)};$('hexApply').onclick=()=>{let p=$('narcPath').value,id=getVal('narcMember'),a=parseHex($('hexInput').value),old=memberBytes(p,id);if(a.length!==old.length){alert('Hex 長度必須保持 '+old.length+' bytes');return}patchMember(p,id,a);setStatus('Hex 已套用。',true)};
 </script>
 </body></html>
